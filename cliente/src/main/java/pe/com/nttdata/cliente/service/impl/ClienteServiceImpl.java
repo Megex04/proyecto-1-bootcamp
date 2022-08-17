@@ -25,6 +25,7 @@ public class ClienteServiceImpl implements IClienteService {
         return clienteDao.findAll();
     }
 
+    /////////////////
     public Cliente registrarCliente(Cliente cliente) {
         /*Cliente cliente = Cliente.builder()
                 .nombre(clienteRequest.nombre())
@@ -32,7 +33,7 @@ public class ClienteServiceImpl implements IClienteService {
                 .apellidoMaterno(clienteRequest.apellidoMaterno())
                 .email(clienteRequest.email())
                 .fechaNacimiento(clienteRequest.fechaNacimiento())
-                .build(); */
+                .build();*/
         Cliente clienteResponse = clienteDao.save(cliente);
 
         /*ClienteCheckResponse clienteCheckResponse = restTemplate.getForObject(
@@ -41,12 +42,24 @@ public class ClienteServiceImpl implements IClienteService {
                 ClienteCheckResponse.class,
                 clienteResponse.getId()
         );*/
-        ClienteCheckResponse clienteCheckResponse = clienteCheckClient.validarCliente(clienteResponse.getId());
+        return clienteResponse;
+    }
+
+    //@CircuitBreaker(name = "validarclienteCB", fallbackMethod = "fallValidarclienteCB")
+    //@Retry(name = "validarclienteRetry")
+    public String validarCliente(Cliente cliente) {
+
+        //log.info("Fecha Ejecución validarCliente: " + new Date());
+        ClienteCheckResponse clienteCheckResponse = clienteCheckClient.validarCliente(cliente.getId());
 
         if (clienteCheckResponse.esEstafador()) {
             throw new IllegalStateException("Cliente es un estafador!!");
         }
 
+        return "OK";
+    }
+
+    public void registrarNotificacion(Cliente cliente) {
         NotificacionRequest notificacionRequest = new NotificacionRequest(
                 cliente.getId(),
                 cliente.getEmail(),
@@ -58,10 +71,14 @@ public class ClienteServiceImpl implements IClienteService {
                 "internal.exchange",
                 "internal.notification.routing-key"
         );
-
-        return clienteResponse;
+    }
+/*
+    public String fallValidarclienteCB(Cliente clienteResponse, Exception e) throws MethodArgumentNotValidException {
+        return "NO_OK";
     }
 
+ */
+    //////////////////
     public Cliente modificarCliente(Cliente cliente) {
         /*Cliente cliente = Cliente.builder()
                 .id(clienteRequest.id())

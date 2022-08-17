@@ -11,7 +11,8 @@
 		<module>notificacion</module>
 		<module>clientefeign</module>
 		<module>clientequeues</module>
-	</modules>
+        <module>config-server</module>
+    </modules>
 	<parent>
 		<groupId>org.springframework.boot</groupId>
 		<artifactId>spring-boot-starter-parent</artifactId>
