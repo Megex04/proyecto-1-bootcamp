@@ -42,29 +42,29 @@ services:
       - "15672:15672"
     networks:
       - spring
-#  eureka-server:
-#    image: miguel04/eureka-server:latest
-#    container_name: eureka-server
-#    ports:
-#      - "8761:8761"
-#    environment:
-#      - SPRING_PROFILES_ACTIVE=docker
-#    networks:
-#      - spring
-#    depends_on:
-#      - zipkin
-#  apigateway:
-#    image: miguel04/apigateway:latest
-#    container_name: apigateway
-#    ports:
-#      - "8082:8082"
-#    environment:
-#      - SPRING_PROFILES_ACTIVE=docker
-#    networks:
-#      - spring
-#    depends_on:
-#      - zipkin
-#      - eureka-server
+  eureka-server:
+    image: miguel04/eureka-server:latest
+    container_name: eureka-server
+    ports:
+      - "8761:8761"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - spring
+    depends_on:
+      - zipkin
+  apigateway:
+    image: miguel04/apigateway:latest
+    container_name: apigateway
+    ports:
+      - "8082:8082"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - spring
+    depends_on:
+      - zipkin
+      - eureka-server
   cliente:
     image: miguel04/cliente:latest
     container_name: cliente
@@ -80,7 +80,8 @@ services:
       - postgres
       - rabbitmq
       - config-server
-#      - eureka-server
+      - eureka-server
+      - apigateway
   validarcliente:
     image: miguel04/validarcliente:latest
     container_name: validarcliente
@@ -95,7 +96,8 @@ services:
       - zipkin
       - postgres
       - config-server
-#      - eureka-server
+      - eureka-server
+      - apigateway
   notificacion:
     image: miguel04/notificacion:latest
     container_name: notificacion
@@ -111,7 +113,23 @@ services:
       - postgres
       - rabbitmq
       - config-server
-#      - eureka-server
+      - eureka-server
+  autenticacion:
+    image: miguel04/autenticacion:latest
+    container_name: autenticacion
+    ports:
+      - "8086:8086"
+    environment:
+      - SPRING_PROFILES_ACTIVE=docker
+    networks:
+      - spring
+      - postgres
+    depends_on:
+      - zipkin
+      - postgres
+      - config-server
+      - eureka-server
+      - apigateway
   config-server:
     image: miguel04/config-server:latest
     container_name: config-server
