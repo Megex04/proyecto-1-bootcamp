@@ -1,6 +1,9 @@
 package pe.com.nttdata.cliente.service.impl;
 
+import io.github.resilience4j.circuitbreaker.annotation.CircuitBreaker;
+import io.github.resilience4j.retry.annotation.Retry;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import pe.com.nttdata.cliente.dao.IClienteDao;
 import pe.com.nttdata.cliente.model.Cliente;
@@ -11,8 +14,10 @@ import pe.com.nttdata.clientefeign.validar.cliente.ClienteCheckResponse;
 import pe.com.nttdata.clientequeues.rabbitmq.RabbitMQMessageProducer;
 
 import java.time.LocalDate;
+import java.util.Date;
 import java.util.List;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class ClienteServiceImpl implements IClienteService {
@@ -45,11 +50,11 @@ public class ClienteServiceImpl implements IClienteService {
         return clienteResponse;
     }
 
-    //@CircuitBreaker(name = "validarclienteCB", fallbackMethod = "fallValidarclienteCB")
-    //@Retry(name = "validarclienteRetry")
+    @CircuitBreaker(name = "validarclienteCB", fallbackMethod = "fallValidarclienteCB")
+    @Retry(name = "validarclienteRetry")
     public String validarCliente(Cliente cliente) {
-
-        //log.info("Fecha Ejecución validarCliente: " + new Date());
+        log.info("Estoy en el metodo validarCliente");
+        log.info("Fecha Ejecución validarCliente: " + new Date());
         ClienteCheckResponse clienteCheckResponse = clienteCheckClient.validarCliente(cliente.getId());
 
         if (clienteCheckResponse.esEstafador()) {
@@ -72,12 +77,10 @@ public class ClienteServiceImpl implements IClienteService {
                 "internal.notification.routing-key"
         );
     }
-/*
-    public String fallValidarclienteCB(Cliente clienteResponse, Exception e) throws MethodArgumentNotValidException {
+
+    public String fallValidarclienteCB(Cliente cliente, Exception e) /*throws MethodArgumentNotValidException */ {
         return "NO_OK";
     }
-
- */
     //////////////////
     public Cliente modificarCliente(Cliente cliente) {
         /*Cliente cliente = Cliente.builder()
