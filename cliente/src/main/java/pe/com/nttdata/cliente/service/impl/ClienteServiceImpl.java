@@ -6,9 +6,11 @@ import lombok.AllArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import pe.com.nttdata.cliente.dao.IClienteDao;
+import pe.com.nttdata.cliente.kafka.producer.ClienteProducer;
 import pe.com.nttdata.cliente.model.Cliente;
 import pe.com.nttdata.cliente.service.IClienteService;
 import pe.com.nttdata.clientefeign.notificacion.NotificacionRequest;
+import pe.com.nttdata.clientefeign.notificacionkafka.NotificacionKafkaRequest;
 import pe.com.nttdata.clientefeign.validar.cliente.ClienteCheckClient;
 import pe.com.nttdata.clientefeign.validar.cliente.ClienteCheckResponse;
 import pe.com.nttdata.clientequeues.rabbitmq.RabbitMQMessageProducer;
@@ -24,6 +26,7 @@ public class ClienteServiceImpl implements IClienteService {
     private final IClienteDao clienteDao;
     //private final RestTemplate restTemplate;
     private final RabbitMQMessageProducer rabbitMQMessageProducer;
+    private final ClienteProducer clienteProducer;
 
     private final ClienteCheckClient clienteCheckClient;
     public List<Cliente> listarClientes() {
@@ -76,6 +79,15 @@ public class ClienteServiceImpl implements IClienteService {
                 "internal.exchange",
                 "internal.notification.routing-key"
         );
+    }
+    public void registrarNotificacionKafka(Cliente cliente) {
+        NotificacionKafkaRequest notificacionKafkaRequest = new NotificacionKafkaRequest(
+                cliente.getId(),
+                cliente.getEmail(),
+                String.format("Hola %s, bienvenidos(Kafka) a NTTData...",
+                        cliente.getNombre())
+        );
+        clienteProducer.enviarMensaje(notificacionKafkaRequest);
     }
 
     public String fallValidarclienteCB(Cliente cliente, Exception e) /*throws MethodArgumentNotValidException */ {
